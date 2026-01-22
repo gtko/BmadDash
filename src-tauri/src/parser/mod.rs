@@ -22,6 +22,15 @@ pub struct BmadParser;
 impl BmadParser {
     /// Detect if a directory contains a BMAD project
     pub fn is_bmad_project(path: &Path) -> bool {
+        let bmad_output = path.join("_bmad-output");
+        if bmad_output.exists() && bmad_output.is_dir() {
+            return true;
+        }
+
+        if Self::looks_like_bmad_docs(path) {
+            return true;
+        }
+
         // Check for standard BMAD directories
         let bmad_docs = path.join("bmad-docs");
         let dot_bmad = path.join(".bmad");
@@ -49,8 +58,17 @@ impl BmadParser {
         false
     }
 
+    pub fn is_bmad_docs_dir(path: &Path) -> bool {
+        Self::looks_like_bmad_docs(path)
+    }
+
     /// Find the BMAD docs directory in a project
     pub fn find_bmad_docs_dir(project_path: &Path) -> Option<PathBuf> {
+        let bmad_output = project_path.join("_bmad-output");
+        if bmad_output.exists() {
+            return Some(bmad_output);
+        }
+
         let bmad_docs = project_path.join("bmad-docs");
         if bmad_docs.exists() {
             return Some(bmad_docs);
@@ -59,6 +77,10 @@ impl BmadParser {
         let dot_bmad = project_path.join(".bmad");
         if dot_bmad.exists() {
             return Some(dot_bmad);
+        }
+
+        if Self::looks_like_bmad_docs(project_path) {
+            return Some(project_path.to_path_buf());
         }
 
         // Check docs/ folder structure (planning-artifacts, implementation-artifacts)
@@ -70,6 +92,41 @@ impl BmadParser {
         None
     }
 
+    fn looks_like_bmad_docs(path: &Path) -> bool {
+        if !path.exists() || !path.is_dir() {
+            return false;
+        }
+
+        if path.join("sprint-status.yaml").exists()
+            || path.join("epics.md").exists()
+            || path.join("planning-artifacts/epics.md").exists()
+        {
+            return true;
+        }
+
+        if path.join("stories").exists() || path.join("epics").exists() {
+            return true;
+        }
+
+        let story_file_regex = Regex::new(r"^\d+-\d+-.+\.md$").unwrap();
+        let epic_file_regex = Regex::new(r"^epic-?\d+.+\.md$").unwrap();
+
+        if let Ok(entries) = fs::read_dir(path) {
+            for entry in entries.flatten() {
+                let entry_path = entry.path();
+                if !entry_path.is_file() {
+                    continue;
+                }
+                let filename = entry_path.file_name().and_then(|n| n.to_str()).unwrap_or("");
+                if story_file_regex.is_match(filename) || epic_file_regex.is_match(filename) {
+                    return true;
+                }
+            }
+        }
+
+        false
+    }
+
     /// Parse a BMAD project from a directory
     pub fn parse_project(project_path: &Path, custom_bmad_dir: Option<&Path>) -> Result<BmadProject, ParseError> {
         let bmad_dir = if let Some(custom_dir) = custom_bmad_dir {
@@ -79,7 +136,26 @@ impl BmadParser {
                     custom_dir.display()
                 )));
             }
-            custom_dir.to_path_buf()
+            if custom_dir.is_file() {
+                custom_dir
+                    .parent()
+                    .map(|parent| parent.to_path_buf())
+                    .ok_or_else(|| {
+                        ParseError::InvalidStructure(format!(
+                            "Custom BMAD file has no parent directory: {}",
+                            custom_dir.display()
+                        ))
+                    })?
+            } else {
+                let bmad_output = project_path.join("_bmad-output");
+                if custom_dir == project_path && bmad_output.exists() {
+                    bmad_output
+                } else if !Self::looks_like_bmad_docs(custom_dir) && bmad_output.exists() {
+                    bmad_output
+                } else {
+                    custom_dir.to_path_buf()
+                }
+            }
         } else {
             Self::find_bmad_docs_dir(project_path)
                 .ok_or_else(|| ParseError::InvalidStructure("No bmad-docs directory found".into()))?

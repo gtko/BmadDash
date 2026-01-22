@@ -45,6 +45,11 @@ pub fn find_bmad_docs_candidates(project_path: String) -> Vec<String> {
     let mut candidates = Vec::new();
 
     // Check root level first
+    let bmad_output = path.join("_bmad-output");
+    if bmad_output.exists() && bmad_output.is_dir() {
+        candidates.push(bmad_output.to_string_lossy().to_string());
+    }
+
     let bmad_docs = path.join("bmad-docs");
     if bmad_docs.exists() && bmad_docs.is_dir() {
         candidates.push(bmad_docs.to_string_lossy().to_string());
@@ -55,11 +60,23 @@ pub fn find_bmad_docs_candidates(project_path: String) -> Vec<String> {
         candidates.push(dot_bmad.to_string_lossy().to_string());
     }
 
+    if BmadParser::is_bmad_docs_dir(path) {
+        let root = path.to_string_lossy().to_string();
+        if !candidates.contains(&root) {
+            candidates.push(root);
+        }
+    }
+
     // Search 1 level deep
     if let Ok(entries) = std::fs::read_dir(path) {
         for entry in entries.filter_map(|e| e.ok()) {
             let entry_path = entry.path();
             if entry_path.is_dir() {
+                let sub_bmad_output = entry_path.join("_bmad-output");
+                if sub_bmad_output.exists() && sub_bmad_output.is_dir() {
+                    candidates.push(sub_bmad_output.to_string_lossy().to_string());
+                }
+
                 // Check for bmad-docs inside subdirectory
                 let sub_bmad_docs = entry_path.join("bmad-docs");
                 if sub_bmad_docs.exists() && sub_bmad_docs.is_dir() {
