@@ -1,0 +1,68 @@
+project_name: "BmadDash"
+last_updated: "2026-01-22T15:02:00+01:00"
+status: "in-progress"
+current_phase: 1
+current_workflow: "brainstorm-project"
+
+track_info:
+  track: "bmad-method"
+  type: "brownfield"
+  description: "Complete product and system design for complex brownfield work"
+
+workflows:
+  - id: "document-project"
+    name: "Document Project"
+    status: "completed"
+    agent: "analyst"
+    command: "/bmad:bmm:workflows:document-project"
+    phase: 0
+    
+  - id: "brainstorm-project"
+    name: "Brainstorming"
+    status: "pending"
+    agent: "analyst"
+    command: "/bmad:bmm:workflows:brainstorming"
+    phase: 1
+    
+  - id: "prd"
+    name: "Product Requirements Document"
+    status: "pending"
+    agent: "pm"
+    command: "/bmad:bmm:workflows:create-prd"
+    phase: 2
+    
+  - id: "create-ux-design"
+    name: "UX Design"
+    status: "pending"
+    agent: "ux-designer"
+    command: "/bmad:bmm:workflows:create-ux-design"
+    phase: 2
+    conditional: "if_has_ui"
+
+  - id: "create-architecture"
+    name: "System Architecture"
+    status: "pending"
+    agent: "architect"
+    command: "/bmad:bmm:workflows:create-architecture"
+    phase: 3
+
+  - id: "create-epics-and-stories"
+    name: "Create Epics & Stories"
+    status: "pending"
+    agent: "pm"
+    command: "/bmad:bmm:workflows:create-epics-and-stories"
+    phase: 3
+
+  - id: "implementation-readiness"
+    name: "Implementation Readiness Check"
+    status: "pending"
+    agent: "architect"
+    command: "/bmad:bmm:workflows:implementation-readiness"
+    phase: 3
+
+  - id: "sprint-planning"
+    name: "Sprint Planning"
+    status: "pending"
+    agent: "sm"
+    command: "/bmad:bmm:workflows:sprint-planning"
+    phase: 4
