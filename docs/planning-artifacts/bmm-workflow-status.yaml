@@ -1,8 +1,8 @@
 project_name: "BmadDash"
-last_updated: "2026-01-22T15:02:00+01:00"
+last_updated: "2026-01-23T12:00:00+01:00"
 status: "in-progress"
-current_phase: 1
-current_workflow: "brainstorm-project"
+current_phase: 3
+current_workflow: "create-epics-and-stories"
 
 track_info:
   track: "bmad-method"
@@ -16,21 +16,23 @@ workflows:
     agent: "analyst"
     command: "/bmad:bmm:workflows:document-project"
     phase: 0
-    
+
   - id: "brainstorm-project"
     name: "Brainstorming"
-    status: "pending"
+    status: "completed"
     agent: "analyst"
     command: "/bmad:bmm:workflows:brainstorming"
     phase: 1
-    
+    output: "docs/analysis/brainstorming-session-2026-01-22.md"
+
   - id: "prd"
     name: "Product Requirements Document"
-    status: "pending"
+    status: "completed"
     agent: "pm"
     command: "/bmad:bmm:workflows:create-prd"
     phase: 2
-    
+    output: "docs/planning-artifacts/prd.md"
+
   - id: "create-ux-design"
     name: "UX Design"
     status: "pending"
@@ -41,10 +43,11 @@ workflows:
 
   - id: "create-architecture"
     name: "System Architecture"
-    status: "pending"
+    status: "completed"
     agent: "architect"
     command: "/bmad:bmm:workflows:create-architecture"
     phase: 3
+    output: "docs/planning-artifacts/architecture.md"
 
   - id: "create-epics-and-stories"
     name: "Create Epics & Stories"
